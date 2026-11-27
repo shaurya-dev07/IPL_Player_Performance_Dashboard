@@ -100,6 +100,22 @@ A total of 14 views were created to organize data for analysis and Power BI repo
 
 The Power BI report currently contains four pages.
 
+
+## Dashboard Screenshots
+
+### 1. IPL Overview
+![IPL Overview](screenshots/ipl-overview.png)
+
+### 2. Batting Analysis
+![Batting Analysis](screenshots/batting-analysis.png)
+
+### 3. Bowling Analysis
+![Bowling Analysis](screenshots/bowling-analysis.png)
+
+### 4. Player Comparison
+![Player Comparison](screenshots/player-comparison.png)
+
+
 ### 1. IPL Overview
 
 Provides an overall summary of IPL statistics.
