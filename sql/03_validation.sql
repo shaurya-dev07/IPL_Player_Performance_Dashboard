@@ -1,0 +1,140 @@
+
+-- =====================================================
+-- IPL PLAYER PERFORMANCE DASHBOARD
+-- DATA VALIDATION SCRIPT
+-- Oracle Database 26ai
+-- =====================================================
+
+SET PAGESIZE 100
+SET LINESIZE 180
+SET FEEDBACK ON
+
+PROMPT ==========================================
+PROMPT 1. ROW COUNTS
+PROMPT ==========================================
+
+SELECT 'MATCHES' AS TABLE_NAME, COUNT(*) AS TOTAL_ROWS FROM MATCHES
+UNION ALL
+SELECT 'DELIVERIES', COUNT(*) FROM DELIVERIES
+UNION ALL
+SELECT 'BATTING_STATS', COUNT(*) FROM BATTING_STATS
+UNION ALL
+SELECT 'BOWLING_STATS', COUNT(*) FROM BOWLING_STATS
+UNION ALL
+SELECT 'SEASON_BATTING_STATS', COUNT(*) FROM SEASON_BATTING_STATS
+UNION ALL
+SELECT 'SEASON_BOWLING_STATS', COUNT(*) FROM SEASON_BOWLING_STATS;
+
+PROMPT ==========================================
+PROMPT 2. PRIMARY KEY DUPLICATE CHECK
+PROMPT ==========================================
+
+SELECT ID, COUNT(*) AS DUPLICATE_COUNT
+FROM MATCHES
+GROUP BY ID
+HAVING COUNT(*) > 1;
+
+SELECT BATTER, COUNT(*) AS DUPLICATE_COUNT
+FROM BATTING_STATS
+GROUP BY BATTER
+HAVING COUNT(*) > 1;
+
+PROMPT ==========================================
+PROMPT 3. FOREIGN KEY VALIDATION
+PROMPT ==========================================
+
+SELECT COUNT(*) AS ORPHAN_DELIVERY_RECORDS
+FROM DELIVERIES D
+LEFT JOIN MATCHES M ON D.MATCH_ID = M.ID
+WHERE M.ID IS NULL;
+
+PROMPT ==========================================
+PROMPT 4. RUNS CONSISTENCY
+PROMPT ==========================================
+
+SELECT COUNT(*) AS INCORRECT_RUN_RECORDS
+FROM DELIVERIES
+WHERE TOTAL_RUNS <> BATSMAN_RUNS + EXTRA_RUNS;
+
+PROMPT ==========================================
+PROMPT 5. LEGAL BALL VALIDATION
+PROMPT ==========================================
+
+SELECT LEGAL_BALL, COUNT(*) AS TOTAL_RECORDS
+FROM DELIVERIES
+GROUP BY LEGAL_BALL
+ORDER BY LEGAL_BALL;
+
+SELECT COUNT(*) AS INVALID_LEGAL_BALL_RECORDS
+FROM DELIVERIES
+WHERE LEGAL_BALL NOT IN (0, 1)
+   OR LEGAL_BALL IS NULL;
+
+PROMPT ==========================================
+PROMPT 6. SEASON-WISE MATCH COUNTS
+PROMPT ==========================================
+
+SELECT SEASON, COUNT(*) AS MATCHES_PLAYED
+FROM MATCHES
+GROUP BY SEASON
+ORDER BY SEASON;
+
+PROMPT ==========================================
+PROMPT 7. TOP 10 BATTERS
+PROMPT ==========================================
+
+SELECT BATTER, RUNS, BATTING_AVERAGE, STRIKE_RATE
+FROM (
+    SELECT BATTER, RUNS, BATTING_AVERAGE, STRIKE_RATE
+    FROM BATTING_STATS
+    ORDER BY RUNS DESC
+)
+WHERE ROWNUM <= 10;
+
+PROMPT ==========================================
+PROMPT 8. TOP 10 BOWLERS
+PROMPT ==========================================
+
+SELECT BOWLER, WICKETS, ECONOMY, BOWLING_AVERAGE
+FROM (
+    SELECT BOWLER, WICKETS, ECONOMY, BOWLING_AVERAGE
+    FROM BOWLING_STATS
+    ORDER BY WICKETS DESC
+)
+WHERE ROWNUM <= 10;
+
+PROMPT ==========================================
+PROMPT 9. SEASON-WISE TOP BATTERS
+PROMPT ==========================================
+
+SELECT SEASON, BATTER, RUNS, STRIKE_RATE
+FROM (
+    SELECT SEASON, BATTER, RUNS, STRIKE_RATE,
+           ROW_NUMBER() OVER (
+               PARTITION BY SEASON
+               ORDER BY RUNS DESC
+           ) AS RN
+    FROM SEASON_BATTING_STATS
+)
+WHERE RN <= 3
+ORDER BY SEASON, RN;
+
+PROMPT ==========================================
+PROMPT 10. SEASON-WISE TOP BOWLERS
+PROMPT ==========================================
+
+SELECT SEASON, BOWLER, WICKETS, ECONOMY
+FROM (
+    SELECT SEASON, BOWLER, WICKETS, ECONOMY,
+           ROW_NUMBER() OVER (
+               PARTITION BY SEASON
+               ORDER BY WICKETS DESC
+           ) AS RN
+    FROM SEASON_BOWLING_STATS
+)
+WHERE RN <= 3
+ORDER BY SEASON, RN;
+
+PROMPT ==========================================
+PROMPT VALIDATION COMPLETED
+PROMPT ==========================================
